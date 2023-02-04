@@ -2,11 +2,21 @@
 exports.helpTxt = `'login [name]' - Logs in to ATM \n'deposit [amount]' - Deposits money \n'withdraw [amount]' - Withdraws money \n'transfer [target] [amount]' - Transfers money to other customer \n'logout' - Logout from ATM \n'help' - See list available commands. \n`;
 
 
-exports.login = (action, db) => {
-    
+// login into Atm
+exports.login = (db, action) => {
+    // db required. if not throw intentional error on end to end test; 
+    if(!db || !action) throw "DB and action required";
+    const command = action.trim().split(" ");
+    // action is not correct format
+    if (command.length != 2 || (command.length === 2 && !command[1])) return exports.unableToProceed(action);
+    // all data in correct format
+    const [, userName] = command;
+    if (!db.users[userName]) db.users[userName] = 0;
+    this.currentUser = userName;
+    console.log(`Hello, ${userName}!\nYour balance is ${db.users[userName]}$\n`);
 }
 
-exports.deposite = () => { }
+exports.deposit = () => { }
 
 exports.withdraw = () => { }
 
@@ -22,4 +32,11 @@ exports.unableToProceed = (action) => {
 }
 exports.help = () => {
     console.log(exports.helpTxt)
+}
+
+exports.initDbValue = () => {
+    return {
+        users: {},
+        currentUser: null
+    }
 }
