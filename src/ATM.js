@@ -1,6 +1,6 @@
 
 const readline = require('readline');
-const { help, unableToProceed, unknownCommand, login, initDbValue } = require('./commandHandle');
+const { help, unableToProceed, unknownCommand, login, initDbValue, deposit, withdraw, transfer, logout } = require('./commandHandle');
 
 class ATM {
     constructor() {
@@ -22,27 +22,28 @@ class ATM {
             this.interface.question("$ ", resolve);
         })
     }
-    askHandler = (action) => {
+    askHandler = (action, isNotCallNext) => {
         const mode = action.trim().split(" ")[0];
         switch (mode) {
             case "login":
+                console.log("aaaa")
                 login(this.db, action);
                 break;
 
             case "deposit":
-
+                deposit(this.db, action);
                 break;
 
             case "withdraw":
-
+                withdraw(this.db, action);
                 break;
 
             case "transfer":
-
+                transfer(this.db, action);
                 break;
 
             case "logout":
-
+                logout(this.db, action);
                 break;
 
             case "help":
@@ -54,7 +55,7 @@ class ATM {
                 unknownCommand(mode);
                 break;
         }
-        this.ask().then(this.askHandler);
+        if (!isNotCallNext) this.ask().then(this.askHandler);
     }
 
 }
