@@ -4,7 +4,7 @@ const readline = require('readline');
 describe("ATM", () => {
     let citi = new ATM();
 
-    afterEach(() => {
+    beforeEach(() => {
         citi = new ATM();
     });
 
