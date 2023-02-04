@@ -40,24 +40,144 @@ describe("non db handler", () => {
     })
 })
 
-describe("db handler for login", () => {
-    let db = handler.initDbValue();
-    beforeEach(() => {
-        db = handler.initDbValue();
+describe("validate handler", () => {
+    test("checkArray with incorrect data", () => {
+        expect(handler.checkArray()).toBe(false);
+        expect(handler.checkArray([], 1)).toBe(false);
+        expect(handler.checkArray([undefined, "abc", 3], 2)).toBe(false);
     })
-    test("login without db instance", () => {
-        expect(() => handler.login()).toThrow("DB and action required");
+    test("checkArray with correct data", () => {
+        expect(handler.checkArray([1, 2], 2)).toBe(true);
     })
 
-    test("login without action instance", () => {
-        expect(() => handler.login(db)).toThrow("DB and action required");
+    test("parseCommand with incorrect data", () => {
+        expect(() => handler.parseCommand()).toThrow("DB, action and actionWordCount required");
+        expect(handler.parseCommand(handler.initDbValue(), "login a", 3)).toBe(false);
+        expect(handler.parseCommand(handler.initDbValue(), "login ", 2)).toBe(false);
     })
-    test("login with incorrect action format", () => {
-        const spy = jest.spyOn(handler, "unableToProceed");
-        handler.login(db, "login ");
-        handler.login(db,"login Alice ac");
-        handler.login(db,"login 123 a");
-        handler.login(db,"login 123");
-        expect(spy).toHaveBeenCalledTimes(3)
+    test("parseCommand with correct data", () => {
+        expect(handler.parseCommand(handler.initDbValue(), "login Alice", 2)).toEqual(["login", "Alice"]);
     })
 })
+
+
+describe("db handler", () => {
+    let db = handler.initDbValue();
+    const spy = jest.spyOn(handler, "unableToProceed");
+    beforeEach(() => {
+        db = handler.initDbValue();
+        spy.mockClear();
+    })
+
+    describe("Login cases",()=>{    
+        test("login with incorrect command",()=>{
+            handler.login(db, "deposit Alice ac");
+            handler.login(db, "login 100");
+            handler.login(db, "transfer abc");
+            handler.login(db, "login ");
+            expect(spy).toHaveBeenCalledTimes(4)
+        })
+    
+        test("withdraw with correct command",()=>{
+            handler.login(db,"login Pinky")
+            expect(spy).toHaveBeenCalledTimes(0)
+            expect(db.currentUser).toEqual("Pinky");
+        })
+    })
+
+    describe("Deposit cases",()=>{
+        test("deposit without login",()=>{
+            expect(()=>handler.deposit(db, "deposit 100")).toThrow("Customer not exits");
+        })
+    
+        test("deposit with incorrect command",()=>{
+            handler.deposit(db, "deposit Alice ac");
+            handler.deposit(db, "login 100");
+            handler.deposit(db, "deposit abc");
+            handler.deposit(db, "deposit ");
+            expect(spy).toHaveBeenCalledTimes(4)
+        })
+    
+        test("deposit with command",()=>{
+            handler.login(db,"login Pinky")
+            handler.deposit(db, "deposit 100");
+            expect(spy).toHaveBeenCalledTimes(0)
+            expect(db.users["Pinky"]).toEqual(100);
+        })
+    })
+
+
+    describe("withdraw cases",()=>{
+        test("withdraw without login",()=>{
+            expect(()=>handler.withdraw(db, "withdraw 100")).toThrow("Customer not exits");
+        })
+    
+        test("withdraw with incorrect command",()=>{
+            handler.withdraw(db, "deposit Alice ac");
+            handler.withdraw(db, "login 100");
+            handler.withdraw(db, "withdraw abc");
+            handler.withdraw(db, "withdraw ");
+            expect(spy).toHaveBeenCalledTimes(4)
+        })
+    
+        test("withdraw with command",()=>{
+            handler.login(db,"login Pinky")
+            handler.deposit(db, "deposit 100");
+            handler.withdraw(db, "withdraw 50");
+            handler.withdraw(db, "withdraw 20");
+            expect(spy).toHaveBeenCalledTimes(0)
+            expect(db.users["Pinky"]).toEqual(30);
+        })
+    })
+
+    describe("Logout cases",()=>{
+        test("Logout without login",()=>{
+            expect(()=>handler.logout(db, "logout")).toThrow("Customer not exits");
+        })
+    
+        test("Logout with incorrect command",()=>{
+            handler.logout(db, "deposit Alice ac");
+            handler.logout(db, "login 100");
+            handler.logout(db, "logout abc");
+            expect(spy).toHaveBeenCalledTimes(3)
+        })
+    
+        test("Logout with correct command",()=>{
+            handler.login(db,"login Pinky")
+            handler.deposit(db, "deposit 100");
+            handler.logout(db, "logout");
+            expect(spy).toHaveBeenCalledTimes(0)
+            expect(db.currentUser).toBeNull();
+        })
+    })
+
+    describe("transfer cases",()=>{
+        test("transfer without login",()=>{
+            expect(()=>handler.transfer(db, "transfer Bob 100")).toThrow("Customer not exits");
+            handler.login(db,"login Alice");
+            expect(()=>handler.transfer(db, "transfer Bob 100")).toThrow("Target Customer not exits");
+        })
+    
+        test("transfer with incorrect command",()=>{
+            handler.transfer(db, "deposit Alice ac");
+            handler.transfer(db, "login 100");
+            handler.transfer(db, "transfer abc");
+            handler.transfer(db, "transfer 100 Bob");
+            expect(spy).toHaveBeenCalledTimes(4)
+        })
+    
+        test("transfer with correct command",()=>{
+            handler.login(db,"login Sky")
+            handler.deposit(db, "deposit 100");
+            handler.logout(db,"logout");
+            handler.login(db,"login Sum")
+            handler.deposit(db, "deposit 50");
+            handler.transfer(db, "transfer Sky 20");
+            expect(spy).toHaveBeenCalledTimes(0);
+            expect(db.users["Sky"]).toEqual(120);
+            expect(db.users["Sum"]).toEqual(30);
+        })
+    })
+
+})
+
