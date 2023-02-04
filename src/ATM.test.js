@@ -12,7 +12,7 @@ describe("ATM", () => {
         citi = new ATM();
     });
 
-    test.only("After init call RI should be initialized", () => {
+    test("After init call RI should be initialized", () => {
         readline.createInterface.mockReturnValue({})
         citi.init();
         expect(citi.interface).toBeTruthy();
