@@ -10,7 +10,7 @@ describe("ATM", () => {
 
     test("After init call RI should be initialised", () => {
         citi.init();
-        expect(citi.RI).toBeTruthy();
+        expect(citi.interface).toBeTruthy();
     });
 
     test("ask should send data on resolve which sent by user", () => {
