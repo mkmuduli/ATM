@@ -86,7 +86,7 @@ exports.logout = (db, action) => {
     // if user not exits
     if (db.users[userName] == undefined) throw "Customer not exits";
     db.currentUser = null;
-    console.log(`Goodbye, ${userName}!`)
+    console.log(`Goodbye, ${userName}!\n`)
 }
 
 exports.unknownCommand = (mode) => {
